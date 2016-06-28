@@ -1,8 +1,8 @@
 const express = require('express');
+const bodyParser = require('body-parser');
 const faker = require('faker');
 
 const server = express();
-
 const tweets = [];
 
 for (let i = 0; i < 20; i++) {
@@ -16,6 +16,9 @@ for (let i = 0; i < 20; i++) {
     }
   };
 }
+
+// Middleware
+server.use(bodyParser.json());
 
 // RESTful API
 
@@ -47,7 +50,26 @@ server.get('/tweets/:id', (req, res) => {
 });
 
 // GET /tweets/new -> Display a form for making a new Tweet
-// POST /tweets with { tweet } -> Make a new Tweet with the body
+
+// POST /tweets with { body } -> Make a new Tweet with the body
+server.post('/tweets', (req, res) => {
+  const { body } = req.body;
+  const createTweet = (body) => ({
+    id: faker.random.uuid(),
+    body,
+    author: {
+      username: faker.internet.userName(),
+      avatar: faker.internet.avatar(),
+      email: faker.internet.email()
+    }
+  });
+  const newTweet = createTweet(body);
+
+  tweets.push(newTweet);
+
+  res.redirect(`/tweets/${newTweet.id}`);
+});
+
 // GET /tweets/edit -> Display a form for editing a Tweet
 // PUT /tweets/1 with { tweet }-> Edit a Tweet with the body
 // DELETE /tweets/1 -> Delete a tweet
