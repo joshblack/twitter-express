@@ -1,0 +1,6 @@
+# Ignore npm generated folders and files
+node_modules
+npm-debug.log
+
+# Ignore OS-specific files
+.DS_Store
