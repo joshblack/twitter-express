@@ -1,5 +1,8 @@
+const path = require('path');
 const express = require('express');
 const bodyParser = require('body-parser');
+const methodOverride = require('method-override');
+const hbs = require('express-handlebars');
 const faker = require('faker');
 
 const server = express();
@@ -19,6 +22,15 @@ for (let i = 0; i < 20; i++) {
 
 // Middleware
 server.use(bodyParser.json());
+server.use(bodyParser.urlencoded({ extended: true }));
+server.use(methodOverride('_method'));
+
+// Templating
+server.engine('.hbs', hbs({
+  defaultLayout: 'main',
+  extname: '.hbs',
+}));
+server.set('view engine', '.hbs');
 
 // RESTful API
 
@@ -27,12 +39,22 @@ server.get('/tweets', (req, res) => {
   res.json(tweets);
 });
 
-// GET /tweets/1 -> Get the tweet with the id of 1
-server.get('/tweets/:id', (req, res) => {
-  const { id } = req.params;
+// GET /tweets/new -> Display a form for making a new Tweet
+server.get('/tweets/new', (req, res) => {
+  res.sendFile(path.resolve(__dirname, 'views/tweets.new.html'));
+});
 
-  // findTweetById: [tweet] | []
-  const findTweetById = tweets.filter((tweet) => {
+/**
+ * type TweetType = {
+ *   id: string;
+ *   body: string;
+ *   author: AuthorType;
+ * };
+ */
+
+// findTweetById(id: string): false | TweetType
+function findTweetById(id) {
+  const tweet = tweets.filter((tweet) => {
     if (tweet.id === id) {
       return true;
     }
@@ -40,16 +62,26 @@ server.get('/tweets/:id', (req, res) => {
     return false;
   });
 
-  if (findTweetById.length > 0) {
-    res.json(findTweetById[0]);
+  if (!tweet[0]) {
+    return false;
+  }
+
+  return tweet[0];
+}
+
+// GET /tweets/1 -> Get the tweet with the id of 1
+server.get('/tweets/:id', (req, res) => {
+  const { id } = req.params;
+  const tweet = findTweetById(id);
+
+  if (tweet) {
+    res.json(tweet);
   } else {
     res.status(404).json({
       message: `Tweet not found with id: ${id}`
     });
   }
 });
-
-// GET /tweets/new -> Display a form for making a new Tweet
 
 // POST /tweets with { body } -> Make a new Tweet with the body
 server.post('/tweets', (req, res) => {
@@ -67,11 +99,27 @@ server.post('/tweets', (req, res) => {
 
   tweets.push(newTweet);
 
-  res.redirect(`/tweets/${newTweet.id}`);
+  res.redirect('/tweets');
 });
 
-// GET /tweets/edit -> Display a form for editing a Tweet
+// GET /tweets/:id/edit -> Display a form for editing a Tweet
+server.get('/tweets/:id/edit', (req, res) => {
+  const { id } = req.params;
+  const tweet = findTweetById(id);
+
+  res.render('tweets/edit', { tweet });
+});
+
 // PUT /tweets/1 with { tweet }-> Edit a Tweet with the body
+server.put('/tweets/:id', (req, res) => {
+  const { id } = req.params;
+
+  console.log(req.body);
+
+  res.redirect(`/tweets/${id}`);
+});
+
+
 // DELETE /tweets/1 -> Delete a tweet
 
 server.listen(3000, () => {
