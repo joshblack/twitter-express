@@ -1,0 +1,15 @@
+<h1>Edit Tweet</h1>
+<article class="tweet">
+  <header class="tweet-author">
+    <img src="{{tweet.author.avatar}}" alt="">
+    <p>{{tweet.author.username}}</p>
+    <p>{{tweet.author.email}}</p>
+  </header>
+  <div class="tweet-body">{{tweet.body}}</div>
+</article>
+<form action="/tweets/{{tweet.id}}/?_method=PUT" method="POST">
+  <div>
+    <textarea type="text" name="body">{{tweet.body}}</textarea>
+  </div>
+  <button type="submit">Submit</button>
+</form>
